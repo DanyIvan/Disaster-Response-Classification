@@ -3,9 +3,6 @@ import sys
 import nltk
 import sqlalchemy
 import pandas as pd
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
@@ -16,8 +13,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from joblib import dump, load
-nltk.download(['punkt', 'wordnet', 'stopwords'])
-from workspace_utils import active_session
+from tokenize_messages import tokenize
+#from workspace_utils import active_session
 
 def load_data(database_filepath):
     '''loads data from database_filepath
@@ -31,34 +28,6 @@ def load_data(database_filepath):
     Y = data.drop(columns=['id', 'message', 'original', 'genre'])
     category_names = Y.columns
     return X, Y, category_names
-
-
-def tokenize(text):
-    '''cleans text and tokeinizes it'''
-    #clean urls
-    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    detected_urls = re.findall(url_regex, text)
-    for url in detected_urls:
-        text = text.replace(url, "urlplaceholder")
-        
-    #remove punctuation
-    text = re.sub('[^a-zA-Z1-9]', ' ', text)
-        
-    #tokeinize and lemmatize text
-    tokens = word_tokenize(text)
-    lemmatizer = WordNetLemmatizer()
-    
-    #remove stopwords
-    tokens = [x for x in tokens if x not in stopwords.words('english')]
-    
-    #remove spaces and convert to lower
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
-    return clean_tokens
-
 
 def build_model():
     '''performs a grid search on  GradientBoostingClassifier 
@@ -109,8 +78,8 @@ def main():
         model = build_model()
         
         print('Training model...')
-        with active_session():
-            model.fit(X_train, Y_train)
+        #with active_session():
+        model.fit(X_train, Y_train)
         
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
